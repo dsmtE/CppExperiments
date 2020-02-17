@@ -3,6 +3,7 @@
 #include <iostream>     // std::cout
 #include <algorithm>
 #include <assert.h>
+#include "MatrixExpression.hpp"
 
 template <typename T, size_t R, size_t C>
 class Matrix {
@@ -29,6 +30,8 @@ public:
     
     // TODO with expression template
     constexpr Matrix<T, R, C>& operator=(const Matrix<T, R, C>& M); // TODO
+    template <typename E>
+    constexpr Matrix<T, R, C>& operator=(const E& expression);
     Matrix<T, R, C> operator+(const Matrix<T, R, C>& M) const; // TODO
     Matrix<T, R, C> operator+(const T& val) const; // TODO
     
@@ -89,7 +92,7 @@ public:
     // ----- useFull Method -----
     constexpr Matrix<T, R, C> fill(const T& val) const; // TODO
     constexpr T det() const; // TODO
-    Matrix<T, C, R>& transpose() const;
+    Matrix<T, C, R> transpose() const;
     // TOTO inplace transpose (pb with template arguments)
     Matrix<T, 1, R * C>& flatten() const; // TODO
 
@@ -116,23 +119,27 @@ constexpr Matrix<T, R, C>::Matrix(const std::initializer_list<T>& list) {
     }
 }
 
-// template <typename T, size_t R, size_t C>
-// template <typename... Args>
-// constexpr Matrix<T, R, C>::Matrix(Args&&... args) : data_{ std::forward<Args>(args)... } {
-// }
-    
-
-// template <typename T, size_t R, size_t C>
-// Matrix<T, R, C>::~Matrix() {
-//     // nothing to do
-// }
-
 // ----- Operators -----
 
 template <typename T, size_t R, size_t C>
 constexpr Matrix<T, R, C>& Matrix<T, R, C>::operator=(const Matrix<T, R, C>& M) {
     if (this != &M) {
-        // TODO
+        for (size_t i = 0; i < M.rows_; ++i) {
+            for (size_t j = 0; j < M.cols_; ++j) {
+                data_[id(i, j)] = M(i, j);
+            }
+        }
+    }
+    return *this;
+}
+
+template <typename T, size_t R, size_t C>
+template <typename E>
+constexpr Matrix<T, R, C>&  Matrix<T, R, C>::operator=(const E& expression) {
+    for (size_t i = 0; i < M.rows_; ++i) {
+        for (size_t j = 0; j < M.cols_; ++j) {
+            data_[id(i, j)] = expression(i, j);
+        }
     }
     return *this;
 }
@@ -154,6 +161,7 @@ constexpr bool Matrix<T, R, C>::operator<(const Matrix<T, R, C>& M) {
 }
 
 // ----- Getters ----
+
 template <typename T, size_t R, size_t C>
 constexpr T& Matrix<T, R, C>::at(const size_t& r, const size_t& c) { 
     static_assert(r >= 0 && c >= 0 && r < rows_ && c < cols_, "invalid range");
@@ -177,6 +185,7 @@ constexpr const T& Matrix<T, R, C>::at(const size_t& id) const {
 };
 
 // ----- useFull Method -----
+
 template <typename T, size_t R, size_t C>
 constexpr Matrix<T, R, C> Matrix<T, R, C>::fill(const T& val) const {
     // use std::fill insted ? constexpr ?
@@ -188,7 +197,7 @@ constexpr Matrix<T, R, C> Matrix<T, R, C>::fill(const T& val) const {
 }
 
 template <typename T, size_t R, size_t C>
-Matrix<T, C, R>& Matrix<T, R, C>::transpose() const {
+Matrix<T, C, R> Matrix<T, R, C>::transpose() const {
     Matrix<T, C, R> M;
     for (size_t i = 0; i < M.rows_; ++i) {
         for (size_t j = 0; j < M.cols_; ++j) {
